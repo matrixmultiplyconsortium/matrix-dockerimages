@@ -1,0 +1,88 @@
+version: "3.8"
+
+networks:
+  matrix-net:
+    driver: bridge
+    name: matrix-net
+
+services:
+  # 1. Discovery Relay: Nostr Kind 30000 Worker Registry & Matchmaking
+  relay:
+    build:
+      context: ..
+      dockerfile: matrix-dockerimages/relay/Dockerfile
+    image: matrix-relay:latest
+    container_name: matrix-relay
+    restart: unless-stopped
+    ports:
+      - "8008:8008"
+    environment:
+      - MATRIX_RELAY_HOST=0.0.0.0
+      - MATRIX_RELAY_PORT=8008
+      - MATRIX_RELAY_LOG_LEVEL=INFO
+    networks:
+      - matrix-net
+
+  # 2. Settlement Layer: Lightning L402 Invoicing & Fraud Slashing Engine
+  settlement:
+    build:
+      context: ..
+      dockerfile: matrix-dockerimages/settlement/Dockerfile
+    image: matrix-settlement:latest
+    container_name: matrix-settlement
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - MATRIX_SETTLEMENT_HOST=0.0.0.0
+      - MATRIX_SETTLEMENT_PORT=8080
+      - MATRIX_SETTLEMENT_SECRET_KEY=settlement_secret_key_dev
+      - MATRIX_SETTLEMENT_LOG_LEVEL=INFO
+    networks:
+      - matrix-net
+
+  # 3. Compute Node: Worker daemon performing matrix tiling & execution
+  compute-node:
+    build:
+      context: ..
+      dockerfile: matrix-dockerimages/compute-node/Dockerfile
+    image: matrix-compute-node:latest
+    container_name: matrix-compute-node
+    restart: unless-stopped
+    ports:
+      - "50051:50051"
+    environment:
+      - MATRIX_WORKER_P2P_HOST=0.0.0.0
+      - MATRIX_WORKER_P2P_PORT=50051
+      - MATRIX_WORKER_SATS_PER_GFLOP=0.0005
+      - MATRIX_WORKER_MIN_TASK_SATS=10
+      - MATRIX_WORKER_DTYPE_PREFERENCE=fp32
+      - MATRIX_WORKER_NOSTR_RELAYS=["ws://relay:8008"]
+      - MATRIX_WORKER_SETTLEMENT_API_URL=http://settlement:8080
+      - MATRIX_WORKER_SETTLEMENT_VERIFICATION_KEY=settlement_secret_key_dev
+      - MATRIX_WORKER_LOG_LEVEL=INFO
+    depends_on:
+      - relay
+      - settlement
+    networks:
+      - matrix-net
+
+  # 4. Client Orchestrator: SDK consumer dispatching matrix operations
+  client:
+    build:
+      context: ..
+      dockerfile: matrix-dockerimages/client/Dockerfile
+    image: matrix-client:latest
+    container_name: matrix-client
+    environment:
+      - MATRIX_CLIENT_RELAYS=["ws://relay:8008"]
+      - MATRIX_CLIENT_SETTLEMENT_URL=http://settlement:8080
+      - MATRIX_CLIENT_LOG_LEVEL=INFO
+    depends_on:
+      - relay
+      - settlement
+      - compute-node
+    networks:
+      - matrix-net
+    profiles:
+      - client
