@@ -45,5 +45,5 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Expose default settlement HTTP API port
 EXPOSE 8080
 
-# Entrypoint to be populated upon settlement layer implementation
-CMD ["python", "-c", "print('Matrix Settlement Layer container initialized. Awaiting package entrypoint.')"]
+# Entrypoint starting settlement REST API server
+CMD ["uvicorn", "matrix_settlement.server:app", "--host", "0.0.0.0", "--port", "8080"]
