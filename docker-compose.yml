@@ -38,6 +38,14 @@ services:
       - MATRIX_SETTLEMENT_PORT=8080
       - MATRIX_SETTLEMENT_SECRET_KEY=settlement_secret_key_dev
       - MATRIX_SETTLEMENT_LOG_LEVEL=INFO
+      - LIGHTNING_BACKEND=${LIGHTNING_BACKEND:-simulated}
+      - SETTLEMENT_LND_HOST=${SETTLEMENT_LND_HOST:-}
+      - SETTLEMENT_LND_REST_URL=${SETTLEMENT_LND_REST_URL:-}
+      - SETTLEMENT_LND_MACAROON_PATH=${SETTLEMENT_LND_MACAROON_PATH:-}
+      - SETTLEMENT_LND_TLS_PATH=${SETTLEMENT_LND_TLS_PATH:-}
+      - WORKER_LIGHTNING_PUBKEY=${WORKER_LIGHTNING_PUBKEY:-}
+    volumes:
+      - ./certs:/app/certs:ro
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
       interval: 10s
@@ -84,6 +92,11 @@ services:
       - MATRIX_CLIENT_RELAYS=["ws://relay:8008"]
       - MATRIX_CLIENT_SETTLEMENT_URL=http://settlement:8080
       - MATRIX_CLIENT_LOG_LEVEL=INFO
+      - CONSUMER_LND_REST_URL=${CONSUMER_LND_REST_URL:-}
+      - CONSUMER_LND_MACAROON_PATH=${CONSUMER_LND_MACAROON_PATH:-}
+      - CONSUMER_LND_TLS_PATH=${CONSUMER_LND_TLS_PATH:-}
+    volumes:
+      - ./certs:/app/certs:ro
     depends_on:
       - relay
       - settlement
