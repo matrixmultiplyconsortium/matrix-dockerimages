@@ -1,0 +1,232 @@
+# =============================================================================
+# Phase 03: Multi-Device Lightning Staging Docker Compose
+#
+# Runs a fast local Bitcoin backing node (`bitcoind`) + 3 real LND v0.18.0-beta
+# nodes (`lnd-settlement`, `lnd-worker`, `lnd-consumer`) + Matrix Discovery
+# Relay + Matrix Settlement API.
+# =============================================================================
+
+networks:
+  matrix-net:
+    driver: bridge
+    name: matrix-net
+
+volumes:
+  bitcoind-data:
+  lnd-settlement-data:
+  lnd-worker-data:
+  lnd-consumer-data:
+
+services:
+  # ---------------------------------------------------------------------------
+  # Fast Local Backing Chain (shared by the 3 LND nodes for instant sync & blocks)
+  # ---------------------------------------------------------------------------
+  bitcoind:
+    image: lightninglabs/bitcoin-core:24
+    container_name: matrix-bitcoind
+    restart: unless-stopped
+    profiles: ["hub", "worker", "consumer", "all"]
+    ports:
+      - "18443:18443"
+      - "28332:28332"
+      - "28333:28333"
+    command:
+      - -regtest=1
+      - -server=1
+      - -txindex=1
+      - -fallbackfee=0.00001
+      - -rpcuser=matrix
+      - -rpcpassword=matrix
+      - -rpcallowip=0.0.0.0/0
+      - -rpcbind=0.0.0.0
+      - -zmqpubrawblock=tcp://0.0.0.0:28332
+      - -zmqpubrawtx=tcp://0.0.0.0:28333
+    volumes:
+      - bitcoind-data:/home/bitcoin/.bitcoin
+    networks:
+      - matrix-net
+
+  # ---------------------------------------------------------------------------
+  # DEVICE C (HUB): Settlement LND + Discovery Relay + Settlement API
+  # ---------------------------------------------------------------------------
+  lnd-settlement:
+    image: lightninglabs/lnd:v0.18.0-beta
+    container_name: matrix-lnd-settlement
+    restart: unless-stopped
+    profiles: ["hub", "all"]
+    ports:
+      - "9735:9735"   # LND P2P port
+      - "8081:8080"   # LND REST API port
+      - "10009:10009" # LND gRPC port
+    command:
+      - --noseedbackup
+      - --alias=matrix-settlement-lnd
+      - --bitcoin.active
+      - --bitcoin.regtest
+      - --bitcoin.node=bitcoind
+      - --bitcoind.rpchost=bitcoind:18443
+      - --bitcoind.rpcuser=matrix
+      - --bitcoind.rpcpass=matrix
+      - --bitcoind.zmqpubrawblock=tcp://bitcoind:28332
+      - --bitcoind.zmqpubrawtx=tcp://bitcoind:28333
+      - --rpclisten=0.0.0.0:10009
+      - --restlisten=0.0.0.0:8080
+      - --listen=0.0.0.0:9735
+      - --tlsextradomain=lnd-settlement
+      - --tlsextradomain=host.docker.internal
+      - --tlsextraip=0.0.0.0
+      - --accept-keysend
+      - --protocol.wumbo-channels
+    volumes:
+      - lnd-settlement-data:/root/.lnd
+    depends_on:
+      - bitcoind
+    networks:
+      - matrix-net
+
+  relay:
+    build:
+      context: ..
+      dockerfile: matrix-dockerimages/relay/Dockerfile
+    image: ${MATRIX_IMAGE_PREFIX:-matrix}-relay:${MATRIX_IMAGE_TAG:-latest}
+    container_name: matrix-relay
+    restart: unless-stopped
+    profiles: ["hub", "all"]
+    ports:
+      - "8008:8008"
+    environment:
+      - MATRIX_RELAY_HOST=0.0.0.0
+      - MATRIX_RELAY_PORT=8008
+      - MATRIX_RELAY_LOG_LEVEL=INFO
+    networks:
+      - matrix-net
+
+  settlement:
+    build:
+      context: ..
+      dockerfile: matrix-dockerimages/settlement/Dockerfile
+    image: ${MATRIX_IMAGE_PREFIX:-matrix}-settlement:${MATRIX_IMAGE_TAG:-latest}
+    container_name: matrix-settlement
+    restart: unless-stopped
+    profiles: ["hub", "all"]
+    ports:
+      - "8080:8080"
+    environment:
+      - MATRIX_SETTLEMENT_HOST=0.0.0.0
+      - MATRIX_SETTLEMENT_PORT=8080
+      - MATRIX_SETTLEMENT_SECRET_KEY=${MATRIX_SETTLEMENT_SECRET_KEY:-settlement_secret_key_dev}
+      - MATRIX_SETTLEMENT_LOG_LEVEL=INFO
+      - LIGHTNING_BACKEND=${LIGHTNING_BACKEND:-lnd}
+      - SETTLEMENT_LND_REST_URL=${SETTLEMENT_LND_REST_URL:-https://lnd-settlement:8080}
+      - SETTLEMENT_LND_MACAROON_PATH=${SETTLEMENT_LND_MACAROON_PATH:-/lnd/data/chain/bitcoin/regtest/admin.macaroon}
+      - SETTLEMENT_LND_MACAROON_HEX=${SETTLEMENT_LND_MACAROON_HEX:-}
+      - SETTLEMENT_LND_TLS_PATH=${SETTLEMENT_LND_TLS_PATH:-/lnd/tls.cert}
+      - WORKER_LIGHTNING_PUBKEY=${WORKER_LIGHTNING_PUBKEY:-}
+    volumes:
+      - lnd-settlement-data:/lnd:ro
+    depends_on:
+      - lnd-settlement
+      - relay
+    networks:
+      - matrix-net
+
+  # ---------------------------------------------------------------------------
+  # DEVICE B (WORKER): Worker LND + Matrix Compute Node
+  # ---------------------------------------------------------------------------
+  lnd-worker:
+    image: lightninglabs/lnd:v0.18.0-beta
+    container_name: matrix-lnd-worker
+    restart: unless-stopped
+    profiles: ["worker", "all"]
+    ports:
+      - "9736:9735"   # LND P2P port (mapped to 9736 on host to avoid collision if co-located)
+      - "8082:8080"   # LND REST API port
+      - "10010:10009" # LND gRPC port
+    command:
+      - --noseedbackup
+      - --alias=matrix-worker-lnd
+      - --bitcoin.active
+      - --bitcoin.regtest
+      - --bitcoin.node=bitcoind
+      - --bitcoind.rpchost=bitcoind:18443
+      - --bitcoind.rpcuser=matrix
+      - --bitcoind.rpcpass=matrix
+      - --bitcoind.zmqpubrawblock=tcp://bitcoind:28332
+      - --bitcoind.zmqpubrawtx=tcp://bitcoind:28333
+      - --rpclisten=0.0.0.0:10009
+      - --restlisten=0.0.0.0:8080
+      - --listen=0.0.0.0:9735
+      - --tlsextradomain=lnd-worker
+      - --tlsextraip=0.0.0.0
+      - --accept-keysend
+      - --protocol.wumbo-channels
+    volumes:
+      - lnd-worker-data:/root/.lnd
+    depends_on:
+      - bitcoind
+    networks:
+      - matrix-net
+
+  compute-node:
+    build:
+      context: ..
+      dockerfile: matrix-dockerimages/compute-node/Dockerfile
+    image: ${MATRIX_IMAGE_PREFIX:-matrix}-compute-node:${MATRIX_COMPUTE_NODE_TAG:-latest}
+    container_name: matrix-compute-node
+    restart: unless-stopped
+    gpus: all
+    profiles: ["worker", "all"]
+    ports:
+      - "50051:50051"
+    environment:
+      - MATRIX_WORKER_P2P_HOST=${MATRIX_WORKER_P2P_HOST:-0.0.0.0}
+      - MATRIX_WORKER_P2P_PORT=${MATRIX_WORKER_P2P_PORT:-50051}
+      - MATRIX_WORKER_P2P_MULTIADDR=${MATRIX_WORKER_P2P_MULTIADDR:-}
+      - MATRIX_WORKER_LIGHTNING_ROUTING_PUBKEY=${MATRIX_WORKER_LIGHTNING_ROUTING_PUBKEY:-}
+      - MATRIX_WORKER_SATS_PER_GFLOP=${MATRIX_WORKER_SATS_PER_GFLOP:-0.0005}
+      - MATRIX_WORKER_MIN_TASK_SATS=${MATRIX_WORKER_MIN_TASK_SATS:-10}
+      - MATRIX_WORKER_DTYPE_PREFERENCE=${MATRIX_WORKER_DTYPE_PREFERENCE:-fp32}
+      - MATRIX_WORKER_NOSTR_RELAYS=${MATRIX_WORKER_NOSTR_RELAYS:-["ws://relay:8008"]}
+      - MATRIX_WORKER_SETTLEMENT_API_URL=${MATRIX_WORKER_SETTLEMENT_API_URL:-http://settlement:8080}
+      - MATRIX_WORKER_SETTLEMENT_VERIFICATION_KEY=${MATRIX_WORKER_SETTLEMENT_VERIFICATION_KEY:-settlement_secret_key_dev}
+      - MATRIX_WORKER_INJECT_FRAUD=${MATRIX_WORKER_INJECT_FRAUD:-false}
+      - MATRIX_WORKER_LOG_LEVEL=${MATRIX_WORKER_LOG_LEVEL:-INFO}
+    networks:
+      - matrix-net
+
+  # ---------------------------------------------------------------------------
+  # DEVICE A (CONSUMER): Consumer LND
+  # ---------------------------------------------------------------------------
+  lnd-consumer:
+    image: lightninglabs/lnd:v0.18.0-beta
+    container_name: matrix-lnd-consumer
+    restart: unless-stopped
+    profiles: ["consumer", "all"]
+    ports:
+      - "9737:9735"   # LND P2P port
+      - "8083:8080"   # LND REST API port
+      - "10011:10009" # LND gRPC port
+    command:
+      - --noseedbackup
+      - --alias=matrix-consumer-lnd
+      - --bitcoin.active
+      - --bitcoin.regtest
+      - --bitcoin.node=bitcoind
+      - --bitcoind.rpchost=bitcoind:18443
+      - --bitcoind.rpcuser=matrix
+      - --bitcoind.rpcpass=matrix
+      - --bitcoind.zmqpubrawblock=tcp://bitcoind:28332
+      - --bitcoind.zmqpubrawtx=tcp://bitcoind:28333
+      - --rpclisten=0.0.0.0:10009
+      - --restlisten=0.0.0.0:8080
+      - --listen=0.0.0.0:9735
+      - --tlsextradomain=lnd-consumer
+      - --tlsextraip=0.0.0.0
+      - --accept-keysend
+      - --protocol.wumbo-channels
+    volumes:
+      - lnd-consumer-data:/root/.lnd
+    depends_on:
+      - bitcoind
+    networks:
+      - matrix-net

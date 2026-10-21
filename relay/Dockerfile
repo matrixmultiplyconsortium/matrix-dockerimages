@@ -14,13 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install shared contracts library
+# Install shared contracts library and relay package together
 COPY matrix-contracts /build/matrix-contracts
-RUN pip install --no-cache-dir --prefix=/install /build/matrix-contracts
-
-# Install relay package
 COPY matrix-compute-relay /build/matrix-compute-relay
-RUN pip install --no-cache-dir --prefix=/install /build/matrix-compute-relay
+RUN pip install --no-cache-dir --prefix=/install /build/matrix-contracts /build/matrix-compute-relay
 
 # --- Stage 2: Lean Runtime Container ---
 FROM python:3.11-slim as runtime

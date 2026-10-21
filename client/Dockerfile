@@ -14,13 +14,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Install shared contracts library
+# Install shared contracts library and consumer SDK package together
 COPY matrix-contracts /build/matrix-contracts
-RUN pip install --no-cache-dir --prefix=/install /build/matrix-contracts
-
-# Install consumer SDK package
 COPY matrix-compute-sdk /build/matrix-compute-sdk
-RUN pip install --no-cache-dir --prefix=/install /build/matrix-compute-sdk
+RUN pip install --no-cache-dir --prefix=/install /build/matrix-contracts /build/matrix-compute-sdk
 
 # --- Stage 2: Lean Runtime Container ---
 FROM python:3.11-slim as runtime
