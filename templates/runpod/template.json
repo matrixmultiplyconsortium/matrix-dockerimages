@@ -1,0 +1,34 @@
+{
+  "name": "Distributed Matrix Multiply GPU Worker",
+  "imageName": "matrixcompute/worker:gpu",
+  "dockerArgs": "--ipc=host",
+  "containerDiskInGb": 20,
+  "volumeInGb": 0,
+  "env": [
+    {
+      "key": "MATRIX_WORKER_PAYOUT_ADDRESS",
+      "value": ""
+    },
+    {
+      "key": "MATRIX_WORKER_NOSTR_RELAYS",
+      "value": "wss://relay.matrixcompute.io"
+    },
+    {
+      "key": "MATRIX_WORKER_SETTLEMENT_API_URL",
+      "value": "http://settlement.matrixcompute.io:8000"
+    },
+    {
+      "key": "MATRIX_WORKER_NAT_MODE",
+      "value": "reverse_tunnel"
+    },
+    {
+      "key": "MATRIX_WORKER_SATS_PER_GFLOP",
+      "value": "1.0"
+    },
+    {
+      "key": "MATRIX_WORKER_MIN_TASK_SATS",
+      "value": "1"
+    }
+  ],
+  "readme": "1-Click Community Pod template for unrented RunPod GPU instances to earn Lightning yield."
+}

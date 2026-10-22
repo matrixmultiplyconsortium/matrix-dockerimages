@@ -1,0 +1,16 @@
+{
+  "name": "Matrix Compute Worker",
+  "coin": "CUSTOM",
+  "wallet": "%WAL%",
+  "pool": "CUSTOM",
+  "miner": "custom",
+  "miner_alt": "matrix-worker",
+  "miner_config": {
+    "coin": "CUSTOM",
+    "miner": "matrix-worker",
+    "algo": "matmul_fp32",
+    "template": "%WAL%",
+    "server": "%URL%",
+    "user_config": "MATRIX_WORKER_PAYOUT_ADDRESS=%WAL%\nMATRIX_WORKER_NAT_MODE=reverse_tunnel\nMATRIX_WORKER_SETTLEMENT_API_URL=http://settlement.matrixcompute.io:8000\nMATRIX_WORKER_NOSTR_RELAYS=%URL%\nMATRIX_WORKER_SATS_PER_GFLOP=1.0\nMATRIX_WORKER_MIN_TASK_SATS=1"
+  }
+}
