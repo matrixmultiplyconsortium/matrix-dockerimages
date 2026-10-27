@@ -1,5 +1,7 @@
 # Matrix Docker Images (`matrix-dockerimages`)
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/matrix-compute/matrix-compute-colab/blob/main/01_quickstart_distributed_matmul.ipynb)
+
 Container definitions, Dockerfiles, and orchestration configurations for the **Distributed Matrix Multiplication** network.
 
 This repository packages the four core architectural components into isolated, production-ready container images:
