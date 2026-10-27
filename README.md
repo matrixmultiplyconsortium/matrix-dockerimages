@@ -7,6 +7,7 @@ This repository packages the four core architectural components into isolated, p
 | Component | Directory | Description | Default Port |
 |---|---|---|---|
 | **Client** | [`client/`](./client/) | Consumer SDK orchestrator (`matrix-compute-sdk`) for matrix slicing, task dispatch, and Freivalds verification | N/A (CLI) |
+| **MCP Server** | [`mcp/`](./mcp/) | Official Model Context Protocol server (`matrix-compute-mcp`) & high-level AI primitives for AI agents | N/A (stdio JSON-RPC) |
 | **Compute Node** | [`compute-node/`](./compute-node/) | Decentralized worker daemon (`matrix-compute-node`) for hardware attestation and tensor ops | `50051` (gRPC) |
 | **Relay** | [`relay/`](./relay/) | Nostr Kind 30000 worker registry and matchmaking service (`matrix-compute-relay`) | `8008` (WebSocket) |
 | **Settlement** | [`settlement/`](./settlement/) | Lightning L402 invoice manager and economic routing layer (`matrix-compute-settlement`) | `8080` (HTTP) |
@@ -23,6 +24,10 @@ matrix-dockerimages/
 ├── README.md                # Repository documentation
 ├── client/
 │   ├── Dockerfile           # Multi-stage Python 3.11 build for consumer client
+│   ├── .dockerignore
+│   └── README.md
+├── mcp/
+│   ├── Dockerfile           # Multi-stage Python 3.11 build for matrix-compute-mcp server
 │   ├── .dockerignore
 │   └── README.md
 ├── compute-node/
@@ -92,6 +97,11 @@ docker build -f matrix-dockerimages/relay/Dockerfile -t matrix-relay:latest .
 ### 5. Settlement Layer
 ```bash
 docker build -f matrix-dockerimages/settlement/Dockerfile -t matrix-settlement:latest .
+```
+
+### 6. MCP Server (`matrix-compute-mcp`)
+```bash
+docker build -f matrix-dockerimages/mcp/Dockerfile -t matrix-compute-mcp:latest .
 ```
 
 ---

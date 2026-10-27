@@ -112,3 +112,29 @@ services:
       - matrix-net
     profiles:
       - client
+
+  # 5. MCP Server: Model Context Protocol gateway for autonomous AI agents
+  mcp:
+    build:
+      context: ..
+      dockerfile: matrix-dockerimages/mcp/Dockerfile
+    image: matrix-compute-mcp:latest
+    container_name: matrix-compute-mcp
+    stdin_open: true
+    environment:
+      - MATRIX_NOSTR_RELAYS=${MATRIX_NOSTR_RELAYS:-ws://relay:8008}
+      - MATRIX_SETTLEMENT_API_URL=${MATRIX_SETTLEMENT_API_URL:-http://settlement:8080}
+      - MATRIX_L402_MACAROON=${MATRIX_L402_MACAROON:-}
+      - MATRIX_TRIAL_API_KEY=${MATRIX_TRIAL_API_KEY:-}
+      - MATRIX_OFFLINE_MOCK_MODE=${MATRIX_OFFLINE_MOCK_MODE:-false}
+    volumes:
+      - ./data:/app/data
+      - ./certs:/app/certs:ro
+    depends_on:
+      - relay
+      - settlement
+      - compute-node
+    networks:
+      - matrix-net
+    profiles:
+      - mcp
