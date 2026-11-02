@@ -22,7 +22,7 @@ def test_qr_code_version_selection():
 
 
 def test_qr_code_matrix_generation():
-    data = "lightning:worker@matrixcompute.io"
+    data = "lightning:worker@matrix-compute.com"
     modules = generate_qr_matrix(data)
     size = len(modules)
     # Size must be 4*V + 17
@@ -43,7 +43,7 @@ def test_qr_code_finder_patterns():
 
 
 def test_render_terminal_qr_blocks():
-    data = "lightning:worker@matrixcompute.io"
+    data = "lightning:worker@matrix-compute.com"
     qr_text = render_terminal_qr(data, invert=False, quiet_zone=2)
     assert qr_text
     lines = qr_text.splitlines()
@@ -73,7 +73,7 @@ def test_dashboard_rendering_layout():
         is_gpu=True,
         is_tee=False,
     )
-    payout = "worker@matrixcompute.io"
+    payout = "worker@matrix-compute.com"
     npub = "npub1matrixcomputeoperator00000000000000000000000000000000000"
 
     dash = render_dashboard(

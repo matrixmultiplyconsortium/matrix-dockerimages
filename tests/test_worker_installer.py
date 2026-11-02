@@ -64,7 +64,7 @@ def test_worker_sh_dry_run_nvidia(tmp_worker_dir):
         "--dry-run",
         "--mock-hardware", "nvidia",
         "--non-interactive",
-        "--payout-address", "operator@matrixcompute.io",
+        "--payout-address", "operator@matrix-compute.com",
         "--env-file", env_target,
     ]
     res = subprocess.run(
@@ -83,7 +83,7 @@ def test_worker_sh_dry_run_nvidia(tmp_worker_dir):
     assert "Dry-Run Active. Generated Docker Execution Command:" in stdout
     assert 'MATRIX_WORKER_NAT_MODE="reverse_tunnel"' in stdout
     assert "matrixcompute/worker:gpu" in stdout
-    assert "operator@matrixcompute.io" in stdout
+    assert "operator@matrix-compute.com" in stdout
     assert "OPERATOR DASHBOARD" in stdout
 
 
@@ -99,7 +99,7 @@ def test_worker_sh_dry_run_cpu(tmp_worker_dir):
         "--dry-run",
         "--mock-hardware", "cpu",
         "--non-interactive",
-        "--payout-address", "cpu_worker@matrixcompute.io",
+        "--payout-address", "cpu_worker@matrix-compute.com",
         "--env-file", env_target,
     ]
     res = subprocess.run(
@@ -139,7 +139,7 @@ def test_worker_ps1_dry_run_nvidia(tmp_worker_dir):
         "-DryRun",
         "-MockHardware", "nvidia",
         "-NonInteractive",
-        "-PayoutAddress", "ps1_operator@matrixcompute.io",
+        "-PayoutAddress", "ps1_operator@matrix-compute.com",
         "-EnvFile", env_target,
     ]
     res = subprocess.run(
@@ -158,7 +158,7 @@ def test_worker_ps1_dry_run_nvidia(tmp_worker_dir):
     assert "Dry-Run Active. Generated Docker Execution Command:" in stdout
     assert 'MATRIX_WORKER_NAT_MODE="reverse_tunnel"' in stdout
     assert "matrixcompute/worker:gpu" in stdout
-    assert "ps1_operator@matrixcompute.io" in stdout
+    assert "ps1_operator@matrix-compute.com" in stdout
     assert "OPERATOR DASHBOARD" in stdout
 
 
@@ -175,7 +175,7 @@ def test_worker_ps1_dry_run_cpu(tmp_worker_dir):
         "-DryRun",
         "-MockHardware", "cpu",
         "-NonInteractive",
-        "-PayoutAddress", "cpu_ps1@matrixcompute.io",
+        "-PayoutAddress", "cpu_ps1@matrix-compute.com",
         "-EnvFile", env_target,
     ]
     res = subprocess.run(
@@ -240,7 +240,7 @@ def test_worker_ps1_dry_run_rocm(tmp_worker_dir):
         "-DryRun",
         "-MockHardware", "rocm",
         "-NonInteractive",
-        "-PayoutAddress", "rocm_ps1@matrixcompute.io",
+        "-PayoutAddress", "rocm_ps1@matrix-compute.com",
         "-EnvFile", env_target,
     ]
     res = subprocess.run(
@@ -269,7 +269,7 @@ def test_worker_ps1_dry_run_sev_snp(tmp_worker_dir):
         "-DryRun",
         "-MockHardware", "sev-snp",
         "-NonInteractive",
-        "-PayoutAddress", "sev_ps1@matrixcompute.io",
+        "-PayoutAddress", "sev_ps1@matrix-compute.com",
         "-EnvFile", env_target,
     ]
     res = subprocess.run(

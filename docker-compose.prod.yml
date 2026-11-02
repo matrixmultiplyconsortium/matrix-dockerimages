@@ -1,0 +1,116 @@
+# =============================================================================
+# Production All-in-One Stack: Relay + Settlement + MCP + Caddy Reverse Proxy
+# =============================================================================
+
+networks:
+  matrix-net:
+    driver: bridge
+    name: matrix-net
+
+volumes:
+  caddy-data:
+  caddy-config:
+  mcp-data:
+
+services:
+  # 1. Discovery Relay: Nostr Kind 30000 Worker Registry, Matchmaking & Reverse gRPC Tunnel
+  relay:
+    build:
+      context: ..
+      dockerfile: matrix-dockerimages/relay/Dockerfile
+    image: matrix-relay:latest
+    container_name: matrix-relay
+    restart: unless-stopped
+    ports:
+      - "8008:8008"
+      - "9090:9090"
+    environment:
+      - MATRIX_RELAY_HOST=0.0.0.0
+      - MATRIX_RELAY_PORT=8008
+      - MATRIX_RELAY_GRPC_HOST=0.0.0.0
+      - MATRIX_RELAY_GRPC_PORT=9090
+      - MATRIX_RELAY_ENABLE_GRPC_TUNNEL=true
+      - MATRIX_RELAY_CONTACT=operator@matrix-compute.com
+      - MATRIX_RELAY_LOG_LEVEL=INFO
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8008/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - matrix-net
+
+  # 2. Settlement Layer: Lightning L402 Invoicing, Escrow & Fraud Slashing Engine
+  settlement:
+    build:
+      context: ..
+      dockerfile: matrix-dockerimages/settlement/Dockerfile
+    image: matrix-settlement:latest
+    container_name: matrix-settlement
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - MATRIX_SETTLEMENT_HOST=0.0.0.0
+      - MATRIX_SETTLEMENT_PORT=8080
+      - MATRIX_SETTLEMENT_SECRET_KEY=${MATRIX_SETTLEMENT_SECRET_KEY:-settlement_secret_key_dev}
+      - MATRIX_SETTLEMENT_LOG_LEVEL=INFO
+      - LIGHTNING_BACKEND=${LIGHTNING_BACKEND:-simulated}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - matrix-net
+
+  # 3. MCP Server: Model Context Protocol Streamable HTTP Gateway for AI Agents
+  mcp:
+    build:
+      context: ..
+      dockerfile: matrix-dockerimages/mcp/Dockerfile
+    image: matrix-compute-mcp:latest
+    container_name: matrix-compute-mcp
+    restart: unless-stopped
+    command: ["--http", "--host", "0.0.0.0", "--port", "8090", "--live-mode"]
+    ports:
+      - "8091:8090"
+    environment:
+      - MATRIX_NOSTR_RELAYS=ws://relay:8008
+      - MATRIX_SETTLEMENT_API_URL=http://settlement:8080
+      - MATRIX_OFFLINE_MOCK_MODE=false
+    volumes:
+      - mcp-data:/app/data
+    depends_on:
+      - relay
+      - settlement
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8090/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - matrix-net
+
+  # 4. Caddy Load Balancer / Reverse Proxy with Auto-TLS
+  caddy:
+    image: caddy:2-alpine
+    container_name: matrix-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - relay
+      - settlement
+      - mcp
+    networks:
+      - matrix-net

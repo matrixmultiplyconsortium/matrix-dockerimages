@@ -15,8 +15,8 @@ ENV_FILE="${MATRIX_DIR}/worker.env"
 
 # Default configuration values
 PAYOUT_ADDRESS=""
-NOSTR_RELAYS="wss://relay.matrixcompute.io"
-SETTLEMENT_API_URL="http://settlement.matrixcompute.io:8000"
+NOSTR_RELAYS="wss://relay.matrix-compute.net"
+SETTLEMENT_API_URL="http://settlement.matrix-compute.net:8000"
 SATS_PER_GFLOP="1.0"
 MIN_TASK_SATS="1"
 NAT_MODE="reverse_tunnel"
@@ -204,7 +204,7 @@ if [ -z "$PAYOUT_ADDRESS" ] && [ "$NON_INTERACTIVE" = false ] && [ -t 0 ]; then
     fi
 fi
 if [ -z "$PAYOUT_ADDRESS" ]; then
-    PAYOUT_ADDRESS="worker@matrixcompute.io"
+    PAYOUT_ADDRESS="worker@matrix-compute.com"
 fi
 
 # 5. Determine Docker Container Specification

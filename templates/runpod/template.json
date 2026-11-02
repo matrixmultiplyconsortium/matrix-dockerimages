@@ -11,11 +11,11 @@
     },
     {
       "key": "MATRIX_WORKER_NOSTR_RELAYS",
-      "value": "wss://relay.matrixcompute.io"
+      "value": "wss://relay.matrix-compute.net"
     },
     {
       "key": "MATRIX_WORKER_SETTLEMENT_API_URL",
-      "value": "http://settlement.matrixcompute.io:8000"
+      "value": "http://settlement.matrix-compute.net:8000"
     },
     {
       "key": "MATRIX_WORKER_NAT_MODE",

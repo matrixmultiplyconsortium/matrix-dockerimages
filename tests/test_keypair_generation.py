@@ -90,7 +90,7 @@ def test_keypair_roundtrip_decoding():
 def test_write_env_file_creates_file(tmp_worker_dir):
     target = os.path.join(tmp_worker_dir, ".matrix", "worker.env")
     kp = generate_keypair()
-    payout = "sats@matrixcompute.io"
+    payout = "sats@matrix-compute.com"
 
     write_env_file(target, kp, payout_addr=payout)
     assert os.path.isfile(target)

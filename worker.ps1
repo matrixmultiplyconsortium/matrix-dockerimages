@@ -12,10 +12,10 @@ param (
     [string]$PayoutAddress = "",
 
     [Alias("r")]
-    [string]$Relays = "wss://relay.matrixcompute.io",
+    [string]$Relays = "wss://relay.matrix-compute.net",
 
     [Alias("s")]
-    [string]$SettlementUrl = "http://settlement.matrixcompute.io:8000",
+    [string]$SettlementUrl = "http://settlement.matrix-compute.net:8000",
 
     [double]$SatsPerGflop = 1.0,
 
@@ -180,7 +180,7 @@ if (-not $PayoutAddress -and -not $NonInteractive -and [System.Environment]::Use
     }
 }
 if (-not $PayoutAddress) {
-    $PayoutAddress = "worker@matrixcompute.io"
+    $PayoutAddress = "worker@matrix-compute.com"
 }
 
 # 5. Determine Docker Container Specification

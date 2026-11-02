@@ -92,8 +92,8 @@ def test_stress_qr_diverse_character_sets():
     test_strings = [
         "12345678901234567890",  # Numeric
         "MATRIXCOMPUTEWORKER01",  # Alphanumeric uppercase
-        "matrix:worker@matrixcompute.io",  # Mixed email/URI
-        "https://matrixcompute.io/tasks/tile?id=8372&x=12&y=34",  # Standard URL
+        "matrix:worker@matrix-compute.com",  # Mixed email/URI
+        "https://matrix-compute.com/tasks/tile?id=8372&x=12&y=34",  # Standard URL
         "lnbc250u1p3...lightning...invoice...",  # Lightning invoice prefix
         "LNURL1DP68GURN8GHJ7MRW9E3XJUM59ACXZ7FLW4EK2UNWV9KK7MM5V9EK7AMPD3KX2AR0VEEKZAR0W",  # LNURL
         "⚡₿🔥🚀💻",  # Emojis (multi-byte UTF-8)
@@ -134,7 +134,7 @@ def test_stress_qr_reed_solomon_generator_degrees():
 
 def test_stress_qr_terminal_rendering_half_blocks():
     """Verify Unicode half-block packing, line count arithmetic, and invert toggle."""
-    data = "worker@matrixcompute.io"
+    data = "worker@matrix-compute.com"
     for qz in [0, 1, 2, 4]:
         rendered = render_terminal_qr(data, invert=False, quiet_zone=qz)
         lines = rendered.splitlines()

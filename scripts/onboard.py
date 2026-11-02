@@ -221,7 +221,7 @@ def render_dashboard(
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-    qr_target = payout_address if payout_address else f"lightning:{npub}@matrixcompute.io"
+    qr_target = payout_address if payout_address else f"lightning:{npub}@matrix-compute.com"
     qr_text = render_terminal_qr(qr_target, invert=invert_qr, quiet_zone=2)
 
     width = 72
@@ -292,7 +292,7 @@ def main() -> None:
 
     # 3. dashboard
     dash_parser = subparsers.add_parser("dashboard", help="Render ANSI/Unicode operator dashboard")
-    dash_parser.add_argument("--payout", "--payout-address", type=str, default="worker@matrixcompute.io", help="Payout address")
+    dash_parser.add_argument("--payout", "--payout-address", type=str, default="worker@matrix-compute.com", help="Payout address")
     dash_parser.add_argument("--npub", type=str, default="npub1matrixcomputeoperator00000000000000000000000000000000000", help="Nostr npub")
     dash_parser.add_argument("--nat-mode", type=str, default="OUTBOUND-ONLY NAT", help="Network mode string")
     dash_parser.add_argument("--tier", type=str, default="PROBATIONARY", help="Staking tier string")

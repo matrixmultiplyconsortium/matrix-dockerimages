@@ -1,0 +1,27 @@
+relay.matrix-compute.net {
+    reverse_proxy relay:8008
+}
+
+settlement.matrix-compute.net {
+    reverse_proxy settlement:8080
+}
+
+mcp.matrix-compute.net {
+    reverse_proxy mcp:8090
+}
+
+:80 {
+    handle_path /relay* {
+        reverse_proxy relay:8008
+    }
+    handle_path /settlement* {
+        reverse_proxy settlement:8080
+    }
+    handle_path /mcp* {
+        reverse_proxy mcp:8090
+    }
+    handle {
+        header Content-Type application/json
+        respond `{"status":"ok","platform":"matrix-compute.net","services":{"relay":"wss://relay.matrix-compute.net","settlement":"https://settlement.matrix-compute.net","mcp":"https://mcp.matrix-compute.net"}}` 200
+    }
+}
