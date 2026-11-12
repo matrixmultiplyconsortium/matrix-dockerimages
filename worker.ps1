@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # Distributed Matrix Multiply — 1-Click Worker Node Installer (Windows / WSL2)
 #
 # Auto-detects compute hardware (NVIDIA GPU, AMD ROCm, AMD SEV-SNP, Intel TDX, CPU),
@@ -17,7 +17,7 @@ param (
     [Alias("s")]
     [string]$SettlementUrl = "http://settlement.matrix-compute.net:8000",
 
-    [double]$SatsPerGflop = 1.0,
+    [double]$SatsPerGflop = 0.00001,
 
     [int]$MinTaskSats = 1,
 

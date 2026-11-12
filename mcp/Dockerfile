@@ -19,7 +19,6 @@ COPY matrix-contracts /build/matrix-contracts
 COPY matrix-compute-sdk /build/matrix-compute-sdk
 COPY matrix-compute-mcp /build/matrix-compute-mcp
 RUN pip install --no-cache-dir --prefix=/install \
-    websockets \
     /build/matrix-contracts \
     /build/matrix-compute-sdk \
     /build/matrix-compute-mcp
